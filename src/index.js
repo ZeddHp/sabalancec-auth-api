@@ -1,46 +1,55 @@
 const express = require('express');
-//const Datastore = require('nedb-promises'); // DATABASE MODULE
 const bcrypt = require('bcryptjs'); // PASSWORD HASHING MODULE
 const { validatePassword } = require('./utils/validation'); // PASSWORD VALIDATION FUNCTION
-//const { ensureAuthenticated } = require('./middlewares/authMiddleware'); // AUTHENTICATION MIDDLEWARE
 const jwt = require('jsonwebtoken'); // JWT MODULE
-const { users, userRefreshTokens } = require('./models/userModel'); // USER MODELS
-
+const { users } = require('./models/userModel'); // USER MODEL
+const { userRefreshTokens } = require('./models/refreshTokenModel'); // REFRESH TOKEN MODEL
+const { userInvalidTokens } = require('./models/invalidTokenModel'); // INVALID TOKEN MODEL
 const config = require('./config/config'); // CONFIGURATION MODULE
+const { ensureAuthenticated } = require('./middlewares/authMiddleware'); // AUTHENTICATION MIDDLEWARE
 
 // Initialize express
 const app = express();
-const PORT = 3000;
 
 // Configure body parser
 app.use(express.json());
 
 
-// const users = Datastore.create({ filename: 'Users.db', autoload: true }); // !TODO: swhitch to DBMS
-
-// const userRefreshTokens = Datastore.create({ filename: 'UserRefreshTokens.db', autoload: true }); // !TODO: swhitch to DBMS
-
-// module.exports = { users, userRefreshTokens };
-
 app.get('/', (req, res) => {
-    res.send('REST API with Node.js, Express, and MongoDB');
+    res.send(`Server is running on http://localhost:${config.port}`);
 });
+
+
+/** 
+=====================================================================
+======================== API ENDPOINTS =============================
+=====================================================================
+*/
+/*
+    1. POST /api/register - Register a new user
+    2. POST /api/login - Log in a user
+    3. POST /api/refresh-token - Refresh access token
+    4. POST /api/logout - Log out a user
+    5. POST /api/password/reset - Reset user password
+    6. GET /api/user - Get authenticated user details
+    7. PUT /api/user - Update user profile
+*/
 
 
 /**
  * Register a new user
  * @route POST /api/register
  * @access Public
- * @param {Object} req.body - { name, email, password, role }
+ * @param {Object} req.body - { fullName, email, address, password }
  * @returns {Object} { message, id }
  */
 app.post('/api/register', async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { fullName, email, address, password } = req.body;
 
         // check if all fields are provided
-        if (!name || !email || !password) {
-            return res.status(422).json({ error: 'All fields are required (name, email, password)' });
+        if (!fullName || !email || !address || !password) {
+            return res.status(422).json({ error: 'All fields are required (fullName, email, address, password)' });
         }
 
         // email validation for existing user
@@ -57,10 +66,10 @@ app.post('/api/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 12);
 
         const newUser = await users.insert({
-            name,
+            fullName,
             email,
-            password: hashedPassword,
-            role: role ?? 'user',
+            address,
+            password: hashedPassword
         });
 
         return res.status(201).json({ message: 'User registered successfully', id: newUser._id });
@@ -76,7 +85,7 @@ app.post('/api/register', async (req, res) => {
  * @route POST /api/login
  * @access Public
  * @param {Object} req.body - { email, password }
- * @returns {Object} { id, name, email, accessToken }
+ * @returns {Object} { id, fullName, email, address, accessToken }
  */
 app.post('/api/login', async (req, res) => {
     try {
@@ -110,8 +119,9 @@ app.post('/api/login', async (req, res) => {
 
         return res.status(200).json({
             id: user._id,
-            name: user.name,
+            fullName: user.fullName,
             email: user.email,
+            address: user.address,
             accessToken,
             refreshToken
         });
@@ -123,12 +133,12 @@ app.post('/api/login', async (req, res) => {
 
 /**
  * refresh access token
- * @route POST /api/refresh
+ * @route POST /api/refresh-token
  * @access Public
  * @param {String} req.body - { refreshToken }
  * @returns {Object} { accessToken, refreshToken }
  */
-app.post('/api/refresh', async (req, res) => {
+app.post('/api/refresh-token', async (req, res) => {
     try {
         const { refreshToken } = req.body;
 
@@ -170,12 +180,80 @@ app.post('/api/refresh', async (req, res) => {
     }
 });
 
+
+/**
+ * Log out a user
+ * @route POST /api/logout
+ * @access Private
+ * @param {String} req.headers.authorization - Access Token
+ * @returns {Object} 204 - No Content
+ */
+app.post('/api/logout', ensureAuthenticated, async (req, res) => {
+    try {
+        const refreshToken = req.body
+        await userRefreshTokens.remove({ refreshToken: refreshToken });
+
+        await userRefreshTokens.removeMany({ userId: req.user._id });
+        await userRefreshTokens.compactDatafile();
+
+        await userInvalidTokens.insert({
+            accessToken: req.accessToken.value,
+            userId: req.user._id,
+            expirationTime: req.accessToken.exp
+        });
+
+        return res.status(204).send();
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
+/**
+ * Reset user password
+ * @route POST /api/password/reset
+ * @access Private
+ * @param {String} req.body - { currentPassword, newPassword }
+ * @param {String} req.headers.authorization - Access Token
+ * @returns {Object} { message || error }
+ */
+app.post('/api/password/reset', ensureAuthenticated, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(422).json({ error: 'All fields are required (currentPassword, newPassword)' });
+        }
+
+        const user = await users.findOne({ _id: req.user._id });
+
+        const passwordMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Incorrect password' });
+        }
+
+        if (!validatePassword(newPassword).valid) {
+            return res.status(422).json({ error: validatePassword(newPassword).error })
+        };
+
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+        await users.update({ _id: req.user._id }, { $set: { password: hashedPassword } });
+
+        return res.status(200).json({ message: 'Password reset successfully' });
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
 /**
  * Get authenticated user details
  * @route GET /api/user
  * @access Private
  * @param {String} req.headers.authorization - Access Token
- * @returns {Object} { id, name, email, prof_pic (nullable) }
+ * @returns {Object} { id, fullName, email, address }
  */
 app.get('/api/user', ensureAuthenticated, async (req, res) => {
     try {
@@ -183,10 +261,9 @@ app.get('/api/user', ensureAuthenticated, async (req, res) => {
 
         return res.status(200).json({
             id: user._id,
-            name: user.name,
+            fullName: user.fullName,
             email: user.email,
-            prof_pic: user.prof_pic || null,
-            // varam vēl pēc nepieciešamības
+            address: user.address
         });
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -195,24 +272,41 @@ app.get('/api/user', ensureAuthenticated, async (req, res) => {
 });
 
 
-// Middleware to verify the access token
-async function ensureAuthenticated(req, res, next) {
-    const accessToken = req.headers.authorization;
-    if (!accessToken) {
-        return res.status(401).json({ error: 'Access token is required' });
-    }
-
+/**
+ * Update user profile
+ * @route PUT /api/user
+ * @access Private
+ * @param {Object} req.body - { fullName, email, address }
+ * @param {String} req.headers.authorization - Access Token
+ * @returns {Object} { message }
+ */
+app.put('/api/user', ensureAuthenticated, async (req, res) => {
     try {
-        const decodedAccessToken = jwt.verify(accessToken, config.accessTokenSecret);
-        req.user = await users.findOne({ _id: decodedAccessToken.userId });
-        next();
+        const { fullName, email, address } = req.body;
+
+        if (!fullName || !email || !address) {
+            return res.status(422).json({ error: 'All fields are required (fullName, email, address)' });
+        }
+
+        await users.update({ _id: req.user._id }, { $set: { fullName, email, address } });
+
+        //print updated user
+        const user = await users.findOne({ _id: req.user._id });
+
+        const userObj = {
+            id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            address: user.address
+        };
+
+        return res.status(200).json({ message: 'User profile updated successfully', user: userObj });
     } catch (error) {
-        return res.status(401).json({ message: 'Access token invalid or expired' });
+        return res.status(500).json({ error: error.message });
     }
-}
+});
 
-
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(config.port, () => {
+    console.log(`Server is running on http://localhost:${config.port}`);
 });
 
