@@ -1,34 +1,103 @@
-**⚡ Setup Guide**
+# 🚀 SABALANCEC Authentication API
 
-1️⃣ Clone the Repository
+## 📜 Overview
+This is a secure authentication and authorization REST API built with **Node.js, Express, and NeDB**. It provides user authentication using **JWT (JSON Web Tokens)** and supports access/refresh token management.
 
-    git clone https://github.com/yourusername/sabalancec-auth-api.git
-    cd sabalancec-auth-api
+## 📁 Project Structure
+```
+/sabalancec-auth-api
+│── /src
+│   │── /config             # Configuration files (env, db, secrets)
+│   │   ├── config.js
+│   │── /middlewares        # Authentication & validation middleware
+│   │   ├── authMiddleware.js
+│   │── /models             # Database models (NeDB)
+│   │   ├── userModel.js
+│   │   ├── refreshTokenModel.js
+│   │   ├── invalidTokenModel.js
+│   │── /utils              # Utility functions (validation, JWT, helpers)
+│   │   ├── validation.js
+│   │   ├── index.js
+│── .env                    # Environment variables (ignored in Git)
+│── .env.example            # Example environment file
+│── .gitignore               # Files to ignore
+│── package.json            # Dependencies
+│── package-lock.json       # Dependency lock file
+│── Users.db                # NeDB database file (ignored in .gitignore)
+│── UserInvalidTokens.db    # NeDB database file (ignored in .gitignore)
+│── UserRefreshTokens.db    # NeDB database file (ignored in .gitignore)
+```
 
-2️⃣ Install Dependencies
+---
 
-    npm install
+## ⚡ Setup Guide
+### 1️⃣ Clone the Repository
+```sh
+git clone https://github.com/yourusername/sabalancec-auth-api.git
+cd sabalancec-auth-api
+```
 
-3️⃣ Setup Environment Variables
+### 2️⃣ Install Dependencies
+```sh
+npm install
+```
 
-    Create a .env file in the root directory.
-    
-    Copy the contents of .env.example and paste them into .env.
+### 3️⃣ Setup Environment Variables
+1. Create a `.env` file in the root directory.
+2. Copy the contents of `.env.example` and paste them into `.env`.
+3. Set up the necessary values:
+```ini
+PORT=3000
+ACCESS_TOKEN_SECRET=youraccesstokensecret
+ACCESS_TOKEN_EXPIRES_IN=15m
+REFRESH_TOKEN_SECRET=yourrefreshtokensecret
+REFRESH_TOKEN_EXPIRES_IN=7d
+```
 
-Set up the necessary values:
+### 4️⃣ Start the Server
+```sh
+npm start
+```
+or in development mode:
+```sh
+npm run dev
+```
 
-    PORT=3000
-    ACCESS_TOKEN_SECRET=youraccesstokensecret
-    ACCESS_TOKEN_EXPIRES_IN=15m
-    REFRESH_TOKEN_SECRET=yourrefreshtokensecret
-    REFRESH_TOKEN_EXPIRES_IN=7d
+The API will be running at: `http://localhost:3000`
 
-4️⃣ Start the Server
+---
 
-    npm start
-    
-    or in development mode:
-    
-    npm run dev
+## 🔑 API Endpoints
 
-The API will be running at: http://localhost:3000
+### **Authentication Routes**
+| Method | Endpoint              | Description |
+|--------|----------------------|-------------|
+| `POST` | `/register`          | Register a new user |
+| `POST` | `/login`             | Log in a user and return an access token |
+| `POST` | `/refresh-token`     | Refresh access token |
+| `POST` | `/logout`            | Log out a user |
+| `POST` | `/password/reset`    | Reset user password |
+
+### **User Routes** (`/api/user`)
+| Method | Endpoint    | Description |
+|--------|------------|-------------|
+| `GET`  | `/user`    | Get authenticated user details |
+| `PUT`  | `/user`    | Update user profile |
+
+---
+
+## 🔹 Best Practices
+- **Use `.env` for secrets and API keys** (never hardcode them in the codebase).
+- **Keep dependencies updated** by running `npm update` regularly.
+- **Use Git branches** for feature development (`git checkout -b feature-branch`).
+- **Run API tests** before pushing changes.
+
+---
+
+## 🚀 Next Steps
+- [ ] Add Swagger for API documentation.
+- [ ] Implement logging for better debugging.
+- [ ] Switch from NeDB to a more scalable DBMS (MongoDB/PostgreSQL).
+
+
+
