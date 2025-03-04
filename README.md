@@ -21,7 +21,7 @@ This is a secure authentication and authorization REST API built with **Node.js,
 │   │   ├── invalidTokenModel.js
 │   │── /utils              # Utility functions (validation, JWT, helpers)
 │   │   ├── validation.js
-│   │   ├── index.js
+│   ├── index.js
 │── .env                    # Environment variables (ignored in Git)
 │── .env.example            # Example environment file
 │── .gitignore               # Files to ignore
