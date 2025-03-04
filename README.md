@@ -1,6 +1,4 @@
-Here's a modified version of your documentation that includes a **Swagger section** with a link and an image showing the API documentation:
 
----
 
 # 🚀 SABALANCEC Authentication API
 
