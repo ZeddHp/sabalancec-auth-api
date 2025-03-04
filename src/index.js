@@ -28,7 +28,7 @@ const swaggerOptions = {
         info: {
             title: 'Authentication API',
             version: '1.0.0',
-            description: 'This is a simple CRUD API application made with Express and documented with Swagger',
+            description: 'This is a simple REST API application made with Express and documented with Swagger',
         },
         servers: [
             {
