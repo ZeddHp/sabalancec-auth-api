@@ -82,7 +82,7 @@ This documentation allows you to:
 - Understand required parameters and expected responses.
 - Test API endpoints directly from the browser. (doesnt really work)
 
-Swagger API Screenshot(![image](https://github.com/user-attachments/assets/d9e956ad-46fa-4869-bef9-aa37e1b135d1)
+Swagger API Screenshot![image](https://github.com/user-attachments/assets/d9e956ad-46fa-4869-bef9-aa37e1b135d1)
 
 
 ---
