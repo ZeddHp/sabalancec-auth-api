@@ -1,0 +1,20 @@
+RefreshToken:
+  type: object
+  properties:
+    id:
+      type: string
+      description: The unique identifier for the refresh token
+      example: "508f1f99bcf86cd799439011"
+    token:
+      type: string
+      description: The refresh token string
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    userId:
+      type: string
+      description: Reference to the user ID this token is associated with
+      example: "507f191e810c19729de860ea"
+    expires:
+      type: string
+      format: date-time
+      description: Expiration date and time of the token
+      example: "2025-01-30T14:34:22Z"

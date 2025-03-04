@@ -1,0 +1,316 @@
+openapi: "3.0.0"
+info:
+  title: "Authentication API"
+  version: "1.0.0"
+  description: "This is a simple REST API application made with Express and documented with Swagger."
+servers:
+  - url: "http://localhost:3000"
+    description: "Development server"
+
+paths:
+  /api/register:
+    post:
+      summary: "Register a new user"
+      description: "Registers a new user with the provided information, including full name, email, address, and password. This endpoint requires all fields to be filled for successful registration."
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+            example:
+              fullName: "John Doe"
+              email: "john.doe@example.com"
+              address: "1234 Main St, Anytown, USA"
+              password: "@SecurePassword123"
+      responses:
+        "201":
+          description: "User registered successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: "507f191e810c19729de860ea"
+                fullName: "John Doe"
+                email: "john.doe@example.com"
+                address: "1234 Main St, Anytown, USA"
+                password: "HashedPasswordExample"
+        "400":
+          description: "Bad request if the user information is incomplete or validation fails."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Missing required fields or invalid data format."
+        "409":
+          description: "Conflict if the email address is already registered."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Email already exists."
+        "422":
+          description: "Unprocessable Entity if the validation rules are not met."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Password must be at least 8 characters long and include one uppercase letter, one number, and one special character."
+        "500":
+          description: "Internal server error, indicating a server-side issue."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unable to register user due to internal server error."
+
+  /api/login:
+    post:
+      summary: "Log in a user"
+      description: "Authenticates user and returns access and refresh tokens."
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "yourPassword"
+      responses:
+        "200":
+          description: "Login successful. Returns user details and tokens."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: "Unauthorized if credentials are incorrect."
+        "500":
+          description: "Internal server error."
+
+  /api/refresh-token:
+    post:
+      summary: "Refresh the access token"
+      description: "Refreshes the access token using a refresh token."
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: "yourRefreshToken"
+      responses:
+        "200":
+          description: "Access token refreshed successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenRefreshResponse"
+        "400":
+          description: "Invalid request if refreshToken is missing."
+        "401":
+          description: "Unauthorized if refreshToken is invalid or expired."
+        "500":
+          description: "Internal server error."
+
+  /api/logout:
+    post:
+      summary: "Log out a user"
+      description: "Logs out the user and invalidates the refresh token."
+      tags:
+        - Authentication
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  example: "yourRefreshToken"
+      responses:
+        "204":
+          description: "Successfully logged out."
+        "400":
+          description: "Bad request if refreshToken is missing."
+        "401":
+          description: "Unauthorized if the refreshToken is invalid."
+        "500":
+          description: "Internal server error."
+
+  /api/password/reset:
+    post:
+      summary: "Reset user password"
+      description: "Allows authenticated users to change their password."
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                  example: "yourCurrentPassword"
+                newPassword:
+                  type: string
+                  example: "yourNewPassword"
+      responses:
+        "200":
+          description: "Password reset successfully."
+        "401":
+          description: "Unauthorized if the current password is incorrect."
+        "422":
+          description: "Unprocessable Entity if required data is missing."
+        "500":
+          description: "Internal server error."
+
+  /api/user:
+    get:
+      summary: "Get authenticated user details"
+      description: "Retrieves the profile details of the authenticated user. Requires a valid Access token for authentication."
+      tags:
+        - User Profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Successfully retrieved user details."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: "507f191e810c19729de860ea"
+                fullName: "John Doe"
+                email: "john.doe@example.com"
+                address: "1234 Main St, Anytown, USA"
+        "401":
+          description: "Unauthorized if the access token is invalid."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired access token."
+        "500":
+          description: "Internal server error, indicating a server-side issue."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unexpected error occurred."
+
+    put:
+      summary: "Update user profile"
+      description: "Allows an authenticated user to update their profile details."
+      tags:
+        - User Profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullName
+                - email
+                - address
+              properties:
+                fullName:
+                  type: string
+                  example: "Jane Doe"
+                email:
+                  type: string
+                  example: "jane.doe@example.com"
+                address:
+                  type: string
+                  example: "4321 South Street, New City, EC3A"
+      responses:
+        "200":
+          description: "User profile updated successfully."
+        "422":
+          description: "Validation error if any required field is missing."
+        "500":
+          description: "Internal server error."
+
+components:
+  schemas:
+    User:
+      $ref: "./components/schemas/User.yaml"
+    RefreshToken:
+      $ref: "./components/schemas/RefreshToken.yaml"
+    InvalidToken:
+      $ref: "./components/schemas/InvalidToken.yaml"
+    LoginResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "507f191e810c19729de860ea"
+        fullName:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          example: "john.doe@example.com"
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    TokenRefreshResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: "newAccessToken"
+        refreshToken:
+          type: string
+          example: "newRefreshToken"

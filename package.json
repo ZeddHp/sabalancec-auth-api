@@ -16,7 +16,8 @@
     "jsonwebtoken": "^9.0.2",
     "nedb-promises": "^6.2.3",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

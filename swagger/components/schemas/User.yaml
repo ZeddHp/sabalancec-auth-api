@@ -1,0 +1,23 @@
+User:
+  type: object
+  properties:
+    id:
+      type: string
+      description: The unique identifier for the user
+      example: "507f191e810c19729de860ea"
+    fullName:
+      type: string
+      description: Full name of the user
+      example: "Valters Jargans"
+    email:
+      type: string
+      description: Email address of the user
+      example: "valters.walle@gmail.com"
+    address:
+      type: string
+      description: Physical address of the user
+      example: "Zvejnieku iela 13"
+    password:
+      type: string
+      description: Hashed password of the user
+      example: "@Jaunaparole111"

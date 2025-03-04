@@ -8,7 +8,7 @@ const { userInvalidTokens } = require('./models/invalidTokenModel'); // INVALID 
 const config = require('./config/config'); // CONFIGURATION MODULE
 const { ensureAuthenticated } = require('./middlewares/authMiddleware'); // AUTHENTICATION MIDDLEWARE
 const swaggerUi = require('swagger-ui-express');
-const swaggerJSDoc = require('swagger-jsdoc');
+const YAML = require('yamljs');
 
 
 // Initialize express
@@ -19,109 +19,19 @@ app.use(express.json());
 
 
 app.get('/', (req, res) => {
-    res.send(`Server is running on http://localhost:${config.port}`);
+    res.send(`Server is running on http://localhost:${config.port} <br>
+              Open API documentation on http://localhost:${config.port}/api-docs`);
 });
 
-const swaggerOptions = {
-    swaggerDefinition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'Authentication API',
-            version: '1.0.0',
-            description: 'This is a simple CRUD API application made with Express and documented with Swagger',
-        },
-        servers: [
-            {
-                url: 'http://localhost:3000',
-                description: 'Development server'
-            }
-        ],
-    },
-    apis: ['src/index.js'] // Make sure this path correctly points to your file with Swagger annotations
-};
+// Load Swagger document
+const swaggerDocument = YAML.load('swagger/swagger.yaml');
 
-const swaggerSpec = swaggerJSDoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Serve Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 
-/**
- * @swagger
- * /api/register:
- *   post:
- *     summary: Registers a new user
- *     description: Adds a new user to the database with full name, email, address, and password.
- *     tags:
- *       - Users
- *     operationId: registerUser
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - in: body
- *         name: body
- *         description: The user's full name, email, address, and password.
- *         required: true
- *         schema:
- *           type: object
- *           properties:
- *             fullName:
- *               type: string
- *               example: "Valters Jargans"
- *             email:
- *               type: string
- *               example: "valters.walle@gmail.com"
- *             address:
- *               type: string
- *               example: "Zvejnieku iela 13"
- *             password:
- *               type: string
- *               example: "@Jaunaparole111"
- *     responses:
- *       201:
- *         description: User registered successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User registered successfully"
- *                 id:
- *                   type: string
- *                   example: "507f191e810c19729de860ea"
- *       409:
- *         description: Email already exists.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Email already exists"
- *       422:
- *         description: Missing one or more of the required fields.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "All fields are required (fullName, email, address, password)"
- *       500:
- *         description: Internal server error, such as a database failure.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
- */
+
+
 /**
  * Register a new user
  * @route POST /api/register
@@ -165,93 +75,8 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/login:
- *   post:
- *     summary: Logs in a user
- *     description: Authenticates a user by their email and password, and returns user details along with access and refresh tokens if successful.
- *     tags:
- *       - Authentication
- *     operationId: loginUser
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - in: body
- *         name: body
- *         description: User's email and password.
- *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - email
- *             - password
- *           properties:
- *             email:
- *               type: string
- *               example: "valters@gmail.com"
- *             password:
- *               type: string
- *               example: "@Jaunaparole007"
- *     responses:
- *       200:
- *         description: Login successful, returns user details and tokens.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                   example: "507f191e810c19729de860ea"
- *                 fullName:
- *                   type: string
- *                   example: "Valters Jargans"
- *                 email:
- *                   type: string
- *                   example: "valters@gmail.com"
- *                 address:
- *                   type: string
- *                   example: "Zvejnieku iela 13"
- *                 accessToken:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 refreshToken:
- *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *       401:
- *         description: Incorrect password or user does not exist.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Incorrect password or user not found"
- *       422:
- *         description: Missing email or password in the request.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "All fields are required (email, password)"
- *       500:
- *         description: Internal server error, such as a failure in backend operations.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
- */
+
+
 /**
  * Log in a user
  * @route POST /api/login
@@ -303,80 +128,8 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-/**
- * @swagger
- * /api/refresh-token:
- *   post:
- *     summary: Refreshes an access token
- *     description: Provides a new access token using a refresh token when the current access token is about to expire or has expired.
- *     tags:
- *       - Authentication
- *     operationId: refreshAccessToken
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - in: body
- *         name: body
- *         description: Refresh token required to obtain a new access token.
- *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - refreshToken
- *           properties:
- *             refreshToken:
- *               type: string
- *               description: Valid refresh token provided during the login or previous token refresh operation.
- *               example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4bkE2c1d0VDczTXRTdmZKIiwiaWF0IjoxNzQxMDE2OTE4LCJleHAiOjE3NDE2MjE3MTgsInN1YiI6IlJlZnJlc2gifQ.oLmar1R20bInRpydl_7P1jp83u40rYdhQUyrtciFwA"
- *     responses:
- *       200:
- *         description: Access token refreshed successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 accessToken:
- *                   type: string
- *                   description: New JWT access token for authorization.
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 refreshToken:
- *                   type: string
- *                   description: Optionally, a new refresh token could also be issued.
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *       400:
- *         description: Refresh token is invalid or missing.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Invalid or missing refresh token."
- *       401:
- *         description: Refresh token is expired.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Refresh token expired."
- *       500:
- *         description: Internal server error, such as a failure in backend operations or token generation issues.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
- */
+
+
 /**
  * refresh access token
  * @route POST /api/refresh-token
@@ -426,69 +179,8 @@ app.post('/api/refresh-token', async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/logout:
- *   post:
- *     summary: Logs out a user
- *     description: Invalidates the user's refresh token and logs out the user by removing their session tokens from the database. Requires a valid access token for authorization.
- *     tags:
- *       - Authentication
- *     operationId: logoutUser
- *     security:
- *       - bearerAuth: []
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         type: string
- *         description: Access token.
- *       - in: body
- *         name: body
- *         required: false
- *         description: Contains the refresh token that needs to be invalidated.
- *         schema:
- *           type: object
- *           properties:
- *             null
- *     responses:
- *       204:
- *         description: Successfully logged out, no content to return.
- *       400:
- *         description: Bad request, typically due to missing or improperly formatted refresh token.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Refresh token is required."
- *       401:
- *         description: Unauthorized, typically due to an invalid or expired access token.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Invalid or expired access token."
- *       500:
- *         description: Internal server error, indicating failures within backend processes such as database errors.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
- */
+
+
 /**
  * Log out a user
  * @route POST /api/logout
@@ -517,87 +209,8 @@ app.post('/api/logout', ensureAuthenticated, async (req, res) => {
 });
 
 
-/**
- * @swagger
- * /api/password/reset:
- *   post:
- *     summary: Resets a user's password
- *     description: Allows authenticated users to change their current password to a new one, ensuring they provide the current password for verification.
- *     tags:
- *       - Authentication
- *     operationId: resetUserPassword
- *     security:
- *       - Authorization: []
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         type: string
- *         description: Access token to authenticate the request.
- *       - in: body
- *         name: body
- *         required: true
- *         description: JSON object containing the current and new passwords.
- *         schema:
- *           type: object
- *           required:
- *             - currentPassword
- *             - newPassword
- *           properties:
- *             currentPassword:
- *               type: string
- *               description: The user's current password.
- *               example: "@Jaunaparole111"
- *             newPassword:
- *               type: string
- *               description: The new password that the user wants to set.
- *               example: "@Jaunaparole007"
- *     responses:
- *       200:
- *         description: Password reset successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Password reset successfully"
- *       401:
- *         description: Incorrect current password or unauthorized request.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Incorrect password"
- *       422:
- *         description: Validation error for missing or invalid fields.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "All fields are required (currentPassword, newPassword)"
- *       500:
- *         description: Internal server error due to processing issues.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
- */
+
+
 /**
  * Reset user password
  * @route POST /api/password/reset
@@ -636,68 +249,8 @@ app.post('/api/password/reset', ensureAuthenticated, async (req, res) => {
     }
 });
 
-/**
- * @swagger
- * /api/user:
- *   get:
- *     summary: Get authenticated user details
- *     description: Retrieves the profile details of the authenticated user. Requires a valid access token for verification and access.
- *     tags:
- *       - User Profile
- *     operationId: getUserDetails
- *     security:
- *       - Authorization: []
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         type: string
- *         description: Access token to authenticate the request.
- *     responses:
- *       200:
- *         description: Successfully retrieved user details.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                   example: "507f1f77bcf86cd799439011"
- *                 fullName:
- *                   type: string
- *                   example: "John Doe"
- *                 email:
- *                   type: string
- *                   example: "john.doe@example.com"
- *                 address:
- *                   type: string
- *                   example: "1234 North Street, New City, EC3A"
- *       401:
- *         description: Unauthorized access, typically due to an invalid or expired access token.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Invalid or expired access token."
- *       500:
- *         description: Internal server error, such as a failure in backend processes.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
- */
+
+
 /**
  * Get authenticated user details
  * @route GET /api/user
@@ -721,90 +274,8 @@ app.get('/api/user', ensureAuthenticated, async (req, res) => {
 
 });
 
-/**
- * @swagger
- * /api/user:
- *   put:
- *     summary: Update user profile
- *     description: Allows an authenticated user to update their profile details. Requires a valid access token and all fields (fullName, email, address) must be provided.
- *     tags:
- *       - User Profile
- *     operationId: updateUserProfile
- *     security:
- *       - bearerAuth: []
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         type: string
- *         description: Bearer token to authenticate the request.
- *       - in: body
- *         name: body
- *         required: true
- *         description: New full name, email, and address to update the user profile.
- *         schema:
- *           type: object
- *           properties:
- *             fullName:
- *               type: string
- *               example: "Jane Doe"
- *             email:
- *               type: string
- *               example: "jane.doe@example.com"
- *             address:
- *               type: string
- *               example: "4321 South Street, New City, EC3A"
- *     responses:
- *       200:
- *         description: User profile updated successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "User profile updated successfully"
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: "507f1f77bcf86cd799439011"
- *                     fullName:
- *                       type: string
- *                       example: "Jane Doe"
- *                     email:
- *                       type: string
- *                       example: "jane.doe@example.com"
- *                     address:
- *                       type: string
- *                       example: "4321 South Street, New City, EC3A"
- *       422:
- *         description: Validation error due to missing required fields.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "All fields are required (fullName, email, address)"
- *       500:
- *         description: Internal server error, such as a failure in backend processes.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unexpected error occurred"
- */
+
+
 /**
  * Update user profile
  * @route PUT /api/user
