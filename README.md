@@ -37,7 +37,7 @@ This is a secure authentication and authorization REST API built with **Node.js,
 ## ⚡ Setup Guide
 ### 1️⃣ Clone the Repository
 ```sh
-git clone https://github.com/yourusername/sabalancec-auth-api.git
+git clone https://github.com/ZeddHp/sabalancec-auth-api.git
 cd sabalancec-auth-api
 ```
 
