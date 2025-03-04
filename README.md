@@ -117,11 +117,3 @@ Swagger API Screenshot![image](https://github.com/user-attachments/assets/d9e956
 - [ ] Implement logging for better debugging.
 - [ ] Switch from NeDB to a more scalable DBMS (MongoDB/PostgreSQL).
 
----
-
-### Summary of Changes:
-- **Added a new section** titled **Swagger API Documentation** to explain how Swagger is used.
-- **Included a link** to access the API documentation at `http://localhost:3000/api-docs`.
-- **Added an image** from the official Swagger website to visually demonstrate what the documentation will look like.
-
-This section ensures that developers using the API can easily find and interact with the documentation. 🚀
