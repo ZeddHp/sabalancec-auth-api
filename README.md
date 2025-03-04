@@ -1,3 +1,7 @@
+Here's a modified version of your documentation that includes a **Swagger section** with a link and an image showing the API documentation:
+
+---
+
 # 🚀 SABALANCEC Authentication API
 
 ## 📜 Overview
@@ -67,6 +71,22 @@ The API will be running at: `http://localhost:3000`
 
 ---
 
+## 📖 Swagger API Documentation
+
+This project uses **Swagger** for API documentation. You can access the automatically generated documentation via:
+
+🔗 **Swagger UI-[http://localhost:3000/api-doc](http://localhost:3000/api-docs)**
+
+This documentation allows you to:
+- View all available API endpoints.
+- Understand required parameters and expected responses.
+- Test API endpoints directly from the browser. (doesnt really work)
+
+![Swagger API Screenshot](![image](https://github.com/user-attachments/assets/49e427db-6a77-4a2c-a6b4-152fef834c49)
+
+
+---
+
 ## 🔑 API Endpoints
 
 ### **Authentication Routes**
@@ -95,9 +115,15 @@ The API will be running at: `http://localhost:3000`
 ---
 
 ## 🚀 Next Steps
-- [ ] Add Swagger for API documentation.
+- ✅ Add Swagger for API documentation.
 - [ ] Implement logging for better debugging.
 - [ ] Switch from NeDB to a more scalable DBMS (MongoDB/PostgreSQL).
 
+---
 
+### Summary of Changes:
+- **Added a new section** titled **Swagger API Documentation** to explain how Swagger is used.
+- **Included a link** to access the API documentation at `http://localhost:3000/api-docs`.
+- **Added an image** from the official Swagger website to visually demonstrate what the documentation will look like.
 
+This section ensures that developers using the API can easily find and interact with the documentation. 🚀
