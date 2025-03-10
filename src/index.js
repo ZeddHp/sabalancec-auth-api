@@ -10,13 +10,19 @@ const { ensureAuthenticated } = require('./middlewares/authMiddleware'); // AUTH
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 
+// Initialize MongoDB connection with Mongoose
+const mongoose = require('mongoose')
+    .connect(config.mongodbURI)
+    .catch(error => { throw new Error(error); })
+    .then(() => {
+        console.log('MongoDB connected successfully!');
+    })
 
 // Initialize express
 const app = express();
 
 // Configure body parser
 app.use(express.json());
-
 
 app.get('/', (req, res) => {
     res.send(`Server is running on http://localhost:${config.port} <br>
@@ -28,7 +34,6 @@ const swaggerDocument = YAML.load('swagger/swagger.yaml');
 
 // Serve Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
 
 
 
@@ -61,7 +66,7 @@ app.post('/api/register', async (req, res) => {
         // wait for password to be hashed
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        const newUser = await users.insert({
+        const newUser = await users.create({
             fullName,
             email,
             address,
@@ -109,7 +114,7 @@ app.post('/api/login', async (req, res) => {
 
         const refreshToken = jwt.sign({ userId: user._id }, config.refreshTokenSecret, { subject: 'Refresh', expiresIn: config.refreshTokenExpiresIn });
 
-        await userRefreshTokens.insert({
+        await userRefreshTokens.create({
             token: refreshToken,
             userId: user._id
         });
@@ -153,14 +158,14 @@ app.post('/api/refresh-token', async (req, res) => {
             return res.status(401).json({ error: 'Refresh token not found' });
         }
 
-        await userRefreshTokens.remove({ _id: userRefreshToken._id });
-        await userRefreshTokens.compactDatafile();
+        await userRefreshTokens.deleteOne({ _id: userRefreshToken._id });
+        //await userRefreshTokens.compactDatafile(); unneeded????
 
         const accessToken = jwt.sign({ userId: decodedRefreshToken.userId }, config.accessTokenSecret, { subject: 'Authorization', expiresIn: config.accessTokenExpiresIn });
 
         const newRefreshToken = jwt.sign({ userId: decodedRefreshToken.userId }, config.refreshTokenSecret, { subject: 'Refresh', expiresIn: config.refreshTokenExpiresIn });
 
-        await userRefreshTokens.insert({
+        await userRefreshTokens.create({
             token: newRefreshToken,
             userId: decodedRefreshToken.userId
         });
@@ -191,12 +196,12 @@ app.post('/api/refresh-token', async (req, res) => {
 app.post('/api/logout', ensureAuthenticated, async (req, res) => {
     try {
         const refreshToken = req.body
-        await userRefreshTokens.remove({ refreshToken: refreshToken });
+        await userRefreshTokens.deleteOne({ refreshToken: refreshToken });
 
-        await userRefreshTokens.removeMany({ userId: req.user._id });
-        await userRefreshTokens.compactDatafile();
+        await userRefreshTokens.deleteMany({ userId: req.user._id });
+        //await userRefreshTokens.compactDatafile(); unneeded?????
 
-        await userInvalidTokens.insert({
+        await userInvalidTokens.create({
             accessToken: req.accessToken.value,
             userId: req.user._id,
             expirationTime: req.accessToken.exp
@@ -240,7 +245,7 @@ app.post('/api/password/reset', ensureAuthenticated, async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-        await users.update({ _id: req.user._id }, { $set: { password: hashedPassword } });
+        await users.findOneAndUpdate({ _id: req.user._id }, { $set: { password: hashedPassword } });
 
         return res.status(200).json({ message: 'Password reset successfully' });
 
