@@ -297,16 +297,22 @@ app.put('/api/user', ensureAuthenticated, async (req, res) => {
             return res.status(422).json({ error: 'All fields are required (fullName, email, address)' });
         }
 
-        await users.update({ _id: req.user._id }, { $set: { fullName, email, address } });
+        // Using findByIdAndUpdate for direct ID-based update, which automatically saves the document
+        const updatedUser = await users.findByIdAndUpdate(
+            req.user._id,
+            { $set: { fullName, email, address } },
+            { new: true }  // This option returns the modified document rather than the original
+        );
 
-        //print updated user
-        const user = await users.findOne({ _id: req.user._id });
+        if (!updatedUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
         const userObj = {
-            id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-            address: user.address
+            id: updatedUser._id,
+            fullName: updatedUser.fullName,
+            email: updatedUser.email,
+            address: updatedUser.address
         };
 
         return res.status(200).json({ message: 'User profile updated successfully', user: userObj });
@@ -314,6 +320,7 @@ app.put('/api/user', ensureAuthenticated, async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 });
+
 
 app.listen(config.port, () => {
     console.log(`Server is running on http://localhost:${config.port}`);
