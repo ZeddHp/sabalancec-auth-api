@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs'); // PASSWORD HASHING MODULE
 const { validatePassword } = require('./utils/validation'); // PASSWORD VALIDATION FUNCTION
+const { getExpiryTime } = require('./utils/expTime'); // TIME UTILITY FUNCTION
 const jwt = require('jsonwebtoken'); // JWT MODULE
 const { users } = require('./models/userModel'); // USER MODEL
 const { userRefreshTokens } = require('./models/refreshTokenModel'); // REFRESH TOKEN MODEL
@@ -81,7 +82,6 @@ app.post('/api/register', async (req, res) => {
 });
 
 
-
 /**
  * Log in a user
  * @route POST /api/login
@@ -113,7 +113,7 @@ app.post('/api/login', async (req, res) => {
         const accessToken = jwt.sign({ userId: user._id }, config.accessTokenSecret, { subject: 'Authorization', expiresIn: config.accessTokenExpiresIn });
 
         const refreshToken = jwt.sign({ userId: user._id }, config.refreshTokenSecret, { subject: 'Refresh', expiresIn: config.refreshTokenExpiresIn });
-
+        
         await userRefreshTokens.create({
             token: refreshToken,
             userId: user._id
@@ -125,7 +125,8 @@ app.post('/api/login', async (req, res) => {
             email: user.email,
             address: user.address,
             accessToken,
-            refreshToken
+            refreshToken,
+            exp: getExpiryTime(config.accessTokenExpiresIn)
         });
     } catch (error) {
         return res.status(500).json({ error: error.message });
