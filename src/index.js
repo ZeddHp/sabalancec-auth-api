@@ -10,6 +10,7 @@ const config = require('./config/config'); // CONFIGURATION MODULE
 const { ensureAuthenticated } = require('./middlewares/authMiddleware'); // AUTHENTICATION MIDDLEWARE
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
+const axios = require('axios'); // Add this line
 
 // Initialize MongoDB connection with Mongoose
 const mongoose = require('mongoose')
@@ -74,6 +75,18 @@ app.post('/api/register', async (req, res) => {
             password: hashedPassword
         });
 
+        // Notify warehouse of new user
+        const response = await axios.post('https://sabalancec-warehouse-sanv8.ondigitalocean.app/api/user', {
+            userId: newUser._id,
+            fullName,
+            email,
+            address
+        });
+        
+        if (response.status !== 200) {
+            return res.status(500).json({ error: 'Failed to notify warehouse' });
+        }
+        
         return res.status(201).json({ message: 'User registered successfully', id: newUser._id });
 
     } catch (error) {
