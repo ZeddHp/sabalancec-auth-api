@@ -75,10 +75,12 @@ app.post('/api/register', async (req, res) => {
             password: hashedPassword
         });
 
+        console.log('New user:', newUser);
+
         // Notify warehouse of new user
-        const response = await axios.post('https://sabalancec-warehouse-sanv8.ondigitalocean.app/api/user', {
+        const response = await axios.post('https://rsc97lvk0erlhrp-y8b9c67gtggi5fdi.adb.eu-zurich-1.oraclecloudapps.com/ords/warehouse/api/user/new', {
             userId: newUser._id,
-            fullName,
+            name: fullName,
             email,
             address
         });
