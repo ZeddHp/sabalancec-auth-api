@@ -79,7 +79,7 @@ app.post('/api/register', async (req, res) => {
 
         // Notify warehouse of new user
         const response = await axios.post('https://rsc97lvk0erlhrp-y8b9c67gtggi5fdi.adb.eu-zurich-1.oraclecloudapps.com/ords/warehouse/api/user/new', {
-            userId: newUser._id,
+            user: newUser._id,
             name: fullName,
             email,
             address
