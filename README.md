@@ -110,10 +110,3 @@ Swagger API Screenshot![image](https://github.com/user-attachments/assets/d9e956
 - **Use Git branches** for feature development (`git checkout -b feature-branch`).
 - **Run API tests** before pushing changes.
 
----
-
-## 🚀 Next Steps
-- ✅ Add Swagger for API documentation.
-- [ ] Implement logging for better debugging.
-- [ ] Switch from NeDB to a more scalable DBMS (MongoDB/PostgreSQL).
-
